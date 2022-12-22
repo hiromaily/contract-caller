@@ -1,14 +1,10 @@
 import { Command } from 'commander'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
-// import HyToken from '../build/contracts/HyToken.json';
-// import { ERC20 } from './erc20/erc20';
 import * as dotenv from 'dotenv'
 import EndpointABI from './endpoint.json'
 
-//dotenv.config({ path: __dirname + '/.env' })
 dotenv.config()
-
 const program = new Command()
 
 // https://etherscan.io/address/0x66a71dcef29a0ffbdbe3c6a460a3b5bc225cd675#code
@@ -58,12 +54,17 @@ const main = async (): Promise<void> => {
   try {
     const web3 = new Web3(args.nodeURL)
     // FIXME: You must provide the json interface of the contract when instantiating a contract object
+    // https://ethereum.stackexchange.com/questions/94601/trouble-with-web3-eth-contract-abi-usage-with-typescript
     // const endpoint = new web3.eth.Contract(
     //   EndpointABI as AbiItem,
     //   args.contractAddr
     // )
+    const contractAbi: AbiItem[] = EndpointABI as AbiItem[];
+    console.log(contractAbi)
+    console.log(args.contractAddr)
+
     const endpoint = new web3.eth.Contract(
-      EndpointABI as AbiItem,
+      contractAbi,
       args.contractAddr
     )
 
