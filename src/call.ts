@@ -2,7 +2,8 @@ import { Command } from 'commander'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
 import * as dotenv from 'dotenv'
-import EndpointABI from './endpoint.json'
+import { encodePackedParams } from './utils'
+import EndpointABI from '../json/endpoint.json'
 
 dotenv.config()
 const program = new Command()
@@ -21,6 +22,7 @@ const checkArgs = (): callParams | undefined => {
   program.option('-m, --mode <string>', 'balance, transfer').parse(process.argv)
   const opts = program.opts()
 
+  // required params
   const params = ['mode']
   for (const param of params) {
     if (!opts[param]) {
@@ -29,6 +31,7 @@ const checkArgs = (): callParams | undefined => {
     }
   }
 
+  // check environment variables
   const envParams = ['NODE_URL', 'CONTRACT_ADDRESS']
   for (const param of envParams) {
     if (!process.env[param]) {
@@ -37,10 +40,11 @@ const checkArgs = (): callParams | undefined => {
     }
   }
 
+  // set returned object
   const callParams: callParams = {
     nodeURL: process.env.NODE_URL || '',
     contractAddr: process.env.CONTRACT_ADDRESS || '',
-    mode: opts.mode || 'default',
+    mode: opts.mode,
   }
   //if (opts.address) web3Params.targetAddr = opts.address;
   //if (opts.amount) web3Params.amount = opts.amount;
@@ -55,30 +59,33 @@ const main = async (): Promise<void> => {
     const web3 = new Web3(args.nodeURL)
     // FIXME: You must provide the json interface of the contract when instantiating a contract object
     // https://ethereum.stackexchange.com/questions/94601/trouble-with-web3-eth-contract-abi-usage-with-typescript
-    // const endpoint = new web3.eth.Contract(
-    //   EndpointABI as AbiItem,
-    //   args.contractAddr
-    // )
     const contractAbi: AbiItem[] = EndpointABI as AbiItem[];
-    console.log(contractAbi)
-    console.log(args.contractAddr)
-
     const endpoint = new web3.eth.Contract(
       contractAbi,
       args.contractAddr
     )
 
-    // const contractAbi: AbiItem[] = HyToken.abi as AbiItem[];
-    // const erc20: ERC20 = new ERC20(
-    //   args.nodeURL,
-    //   args.contractAddr,
-    //   contractAbi
-    // );
-
     console.log(`command: ${args.mode}`)
     switch (args.mode) {
-      case 'default': {
-        await endpoint.methods.estimateFees().call((err: any, res: any) => {
+      case 'endpoint': {
+        // params
+        const chainID = 101
+
+        // FIXME: Error: invalid address (argument="address", value="0x", code=INVALID_ARGUMENT, version=address/5.7.0) 
+        //        (argument="_userApplication", value="0x", code=INVALID_ARGUMENT, version=abi/5.7.0)
+        const ua = "0x0000000000000000000000000000000000000000"
+        
+        const payload = "0x"
+        const payInZro = false
+        const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+        const adapterParams = {
+          [1]: { types: ["uint16", "uint256"], values: [1, 200000] },
+          [2]: { types: ["uint16", "uint256", "uint256", "address"], values: [2, 200000, 100000, ZERO_ADDRESS] },
+        }
+        const fmtAdapterParams = encodePackedParams(web3, adapterParams[2].types.slice(0, -1), adapterParams[2].values.slice(0, -1))        
+
+        // call
+        await endpoint.methods.estimateFees(chainID, ua, payload, payInZro, fmtAdapterParams).call((err: any, res: any) => {
           if (err) {
             console.log('An error occured', err)
             return

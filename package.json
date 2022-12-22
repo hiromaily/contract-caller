@@ -8,7 +8,7 @@
     "fmt": "prettier --write '{src,test}/**/*.{ts,js}'",
     "lint": "eslint --fix 'src/**/*.{js,jsx,ts,tsx,json}'",
     "type-check": "tsc --noEmit",
-    "call": "ts-node src/call.ts --mode default",
+    "call": "ts-node src/call.ts --mode endpoint",
     "call2": "node --loader ts-node/esm src/call.ts"
   },
   "devDependencies": {
@@ -29,6 +29,7 @@
   "dependencies": {
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
     "web3": "^1.8.1",
     "web3-utils": "^1.8.1"
   }
